@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#4f46e5">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="資處一仁 一段商業概論複習題庫練習網站 - 手機最佳化互動刷題與模擬考">
+  <title>商概一段複習測驗 | 資處一仁專屬練習網</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;900&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Canvas for Confetti -->
+  <canvas id="confetti-canvas"></canvas>
+
+  <div id="app-container">
+    <!-- Top Header -->
+    <header class="app-header">
+      <div class="header-top">
+        <div class="brand">
+          <div class="brand-badge">資處一仁</div>
+          <h1 class="brand-title">商業概論一段複習</h1>
+        </div>
+        <div class="header-actions">
+          <button id="btn-sound-toggle" class="icon-btn" title="切換音效" aria-label="切換音效">
+            <svg class="icon" viewBox="0 0 24 24" width="20" height="20">
+              <path class="sound-on-path" fill="currentColor" d="M14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77zm-2.5 9.77l-4.5-4.5H3v7h4l4.5 4.5v-7zm2.5-4.5v2.24c1.23.49 2 1.63 2 2.76s-.77 2.27-2 2.76v2.24c2.28-.59 4-2.6 4-5s-1.72-4.41-4-5z"/>
+            </svg>
+          </button>
+          <button id="btn-theme-toggle" class="icon-btn" title="切換深淺色" aria-label="切換深色模式">
+            <svg class="icon moon-icon" viewBox="0 0 24 24" width="20" height="20">
+              <path fill="currentColor" d="M12.3 2a10 10 0 0 0-1.9 19.8 10 10 0 0 0 11.6-11.6A10 10 0 0 0 12.3 2z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs (Mobile friendly) -->
+      <nav class="nav-tabs" role="tablist">
+        <button class="tab-btn active" data-tab="practice" id="tab-practice">
+          <span class="tab-icon">⚡</span>
+          <span class="tab-text">逐題刷題</span>
+        </button>
+        <button class="tab-btn" data-tab="exam" id="tab-exam">
+          <span class="tab-icon">📝</span>
+          <span class="tab-text">全卷模考</span>
+        </button>
+        <button class="tab-btn" data-tab="mistakes" id="tab-mistakes">
+          <span class="tab-icon">🎯</span>
+          <span class="tab-text">錯題本</span>
+          <span id="mistake-badge" class="badge-counter hidden">0</span>
+        </button>
+        <button class="tab-btn" data-tab="notes" id="tab-notes">
+          <span class="tab-icon">💡</span>
+          <span class="tab-text">考點速記</span>
+        </button>
+      </nav>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+
+      <!-- ================= 1. PRACTICE MODE (CARD VIEW) ================= -->
+      <section id="view-practice" class="view-panel active">
+        <!-- Progress Bar & Top Stats -->
+        <div class="practice-toolbar">
+          <div class="progress-info">
+            <span class="q-counter">第 <strong id="current-q-num">1</strong> / 20 題</span>
+            <span class="accuracy-tag" id="practice-accuracy">正確率: 0%</span>
+          </div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar-fill" id="practice-progress-fill" style="width: 5%;"></div>
+          </div>
+          <div class="quick-tools">
+            <button id="btn-shuffle-practice" class="tool-chip" title="打亂題序">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>
+              <span>隨機題序</span>
+            </button>
+            <button id="btn-bookmark-current" class="tool-chip" title="加入收藏">
+              <span id="bookmark-icon">☆</span>
+              <span>收藏</span>
+            </button>
+            <button id="btn-open-grid" class="tool-chip" title="題目總覽">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M4 11h5V5H4v6zm0 7h5v-6H4v6zm6 0h5v-6h-5v6zm6 0h5v-6h-5v6zm-6-7h5V5h-5v6zm6-6v6h5V5h-5z"/></svg>
+              <span>題號表</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Question Card -->
+        <div class="card question-card" id="card-container">
+          <div class="q-meta">
+            <span class="category-pill" id="card-category">商業保險</span>
+            <span class="type-pill" id="card-type">是非題</span>
+            <span class="pts-pill">5 分</span>
+          </div>
+
+          <h2 class="q-title" id="card-question-text">
+            載入中...
+          </h2>
+
+          <div class="options-container" id="card-options">
+            <!-- Dynamically populated options -->
+          </div>
+
+          <!-- Explanation Panel (revealed on answer) -->
+          <div class="explanation-box hidden" id="card-explanation">
+            <div class="explanation-header">
+              <span class="status-indicator" id="explain-status">答對了！</span>
+              <span class="correct-answer-text">正確答案：<strong id="explain-correct-key">O</strong></span>
+            </div>
+            <div class="explanation-body" id="explain-body">
+              解析內容...
+            </div>
+          </div>
+        </div>
+
+        <!-- Mobile Floating Nav Controls -->
+        <div class="practice-bottom-bar">
+          <button id="btn-prev-q" class="nav-control-btn secondary" disabled>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+            <span>上一題</span>
+          </button>
+          <button id="btn-toggle-explain" class="nav-control-btn tertiary" title="看解析">
+            <span>看解析</span>
+          </button>
+          <button id="btn-next-q" class="nav-control-btn primary">
+            <span>下一題</span>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- ================= 2. EXAM MODE (FULL SIMULATION) ================= -->
+      <section id="view-exam" class="view-panel">
+        <div class="exam-intro-card card" id="exam-start-banner">
+          <div class="exam-badge-row">
+            <span class="banner-badge">高職一段模擬</span>
+            <span class="banner-time">⏱️ 限時 20 分鐘</span>
+            <span class="banner-score">滿分 100 分 (共 20 題)</span>
+          </div>
+          <h2 class="exam-title">商業概論第一段 全真模擬測驗</h2>
+          <p class="exam-desc">
+            包含試卷全部是非題（3題）與選擇題（17題），點選「開始測驗」後將開啟倒數計時，作答過程不顯示答案，交卷後自動計算得分並產生錯題檢討分析！
+          </p>
+          <div class="exam-start-actions">
+            <button id="btn-start-exam" class="btn-primary-action">
+              🚀 開始全卷模擬測驗
+            </button>
+          </div>
+        </div>
+
+        <!-- Live Exam Area (Hidden initially) -->
+        <div id="exam-active-area" class="hidden">
+          <div class="exam-status-sticky">
+            <div class="exam-timer-wrap">
+              <span class="timer-icon">⏳</span>
+              <span id="exam-timer-display" class="timer-digits">20:00</span>
+            </div>
+            <div class="exam-progress-counter">
+              已作答：<strong id="exam-answered-count">0</strong> / 20
+            </div>
+            <button id="btn-submit-exam" class="btn-submit-pill">
+              交卷評分
+            </button>
+          </div>
+
+          <div class="exam-questions-list" id="exam-list-container">
+            <!-- Generated questions list -->
+          </div>
+
+          <div class="exam-footer-submit">
+            <button id="btn-submit-exam-bottom" class="btn-primary-action">
+              確認作答完畢，立即交卷
+            </button>
+          </div>
+        </div>
+
+        <!-- Exam Result Modal / View -->
+        <div id="exam-result-area" class="hidden">
+          <div class="card result-card">
+            <div class="result-score-circle">
+              <div class="score-number" id="result-score">90</div>
+              <div class="score-unit">分</div>
+            </div>
+            <h2 class="result-title" id="result-title">表現優異！</h2>
+            <p class="result-feedback" id="result-feedback">
+              原試卷同學得分 90 分，你也表現得相當出色！快來複習錯題，目標段考 100 滿分！
+            </p>
+
+            <div class="result-stats-grid">
+              <div class="stat-box">
+                <span class="stat-label">答對題數</span>
+                <span class="stat-value text-green" id="result-correct-count">18 題</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-label">答錯題數</span>
+                <span class="stat-value text-rose" id="result-wrong-count">2 題</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-label">未作答</span>
+                <span class="stat-value text-muted" id="result-skipped-count">0 題</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-label">測驗用時</span>
+                <span class="stat-value" id="result-time-taken">08分24秒</span>
+              </div>
+            </div>
+
+            <div class="result-actions">
+              <button id="btn-review-exam-mistakes" class="btn-secondary-action">
+                🔍 僅看本次錯題
+              </button>
+              <button id="btn-retake-exam" class="btn-primary-action">
+                🔄 重新測驗一次
+              </button>
+            </div>
+          </div>
+
+          <div class="exam-detailed-review" id="exam-review-container">
+            <!-- Review cards will be populated here -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= 3. MISTAKE NOTEBOOK ================= -->
+      <section id="view-mistakes" class="view-panel">
+        <div class="mistakes-header-bar">
+          <div class="mistakes-title-wrap">
+            <h2>錯題複習庫</h2>
+            <p>集中練習答錯的題目，完全掌握才能拿滿分！</p>
+          </div>
+          <div class="mistakes-filter-tabs">
+            <button class="filter-chip active" data-filter="all">全部錯題</button>
+            <button class="filter-chip" data-filter="exam-original">試卷原標記錯題 (第3、11題)</button>
+            <button class="filter-chip" data-filter="bookmarked">我的收藏</button>
+          </div>
+        </div>
+
+        <div id="mistakes-list" class="mistakes-list-container">
+          <!-- Populated by JS -->
+        </div>
+      </section>
+
+      <!-- ================= 4. KEY SUMMARY NOTES ================= -->
+      <section id="view-notes" class="view-panel">
+        <div class="notes-header">
+          <h2>一段商概 • 核心考點速記卡</h2>
+          <p>段考考卷必考觀念濃縮整理，利用考前 10 分鐘快速複習！</p>
+        </div>
+
+        <div class="notes-grid">
+          <!-- Card 1 -->
+          <div class="card note-card">
+            <div class="note-card-header">
+              <span class="note-tag tag-blue">考點一</span>
+              <h3>Carroll 企業社會責任四層次 (CSR 金字塔)</h3>
+            </div>
+            <div class="note-card-content">
+              <div class="pyramid-visual">
+                <div class="pyramid-layer layer-4">4. 慈善 / 自由裁量責任 (回饋社會、公益捐款)</div>
+                <div class="pyramid-layer layer-3">3. 倫理責任 (符合社會公義期待、誠信)</div>
+                <div class="pyramid-layer layer-2">2. 法律責任 (守法遵守規章、不違法)</div>
+                <div class="pyramid-layer layer-1">1. 經濟責任 (基石！賺錢盈利、創造就業)</div>
+              </div>
+              <div class="note-callout">
+                <strong>💡 考題提示 (第5題、第15題)：</strong>
+                老闆說「讓員工有薪水、股東有賺錢」是<strong>經濟責任</strong>；「中華電信提供1,600個就業起薪3.5萬」也是<strong>經濟責任</strong>！
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2 -->
+          <div class="card note-card">
+            <div class="note-card-header">
+              <span class="note-tag tag-purple">考點二</span>
+              <h3>企業社會責任觀點演進四時期</h3>
+            </div>
+            <div class="note-card-content">
+              <ul class="timeline-list">
+                <li>
+                  <span class="time-badge">1. 個人責任時期</span>
+                  <p>古典自由經濟初期，自利即公利，企業由個人道德良心自我約束。</p>
+                </li>
+                <li>
+                  <span class="time-badge highlight">2. 廠商責任時期 ⭐</span>
+                  <p><strong>傅立德曼 (Milton Friedman)</strong> 主張：「在合法競爭環境下，企業唯一的社會責任就是為股東賺取最大利潤！」<strong>(第7題必考！)</strong></p>
+                </li>
+                <li>
+                  <span class="time-badge">3. 管理者責任時期</span>
+                  <p>所有權與經營權分離，經理人兼顧員工、顧客、供應商等多元利害關係人。</p>
+                </li>
+                <li>
+                  <span class="time-badge">4. 商業/社會責任時期</span>
+                  <p>現代趨勢，強調 ESG、環境保護與社會永續發展。</p>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Card 3 -->
+          <div class="card note-card">
+            <div class="note-card-header">
+              <span class="note-tag tag-emerald">考點三</span>
+              <h3>商業保險關係人與常見險種比較</h3>
+            </div>
+            <div class="note-card-content">
+              <div class="table-responsive">
+                <table class="notes-table">
+                  <thead>
+                    <tr>
+                      <th>名詞</th>
+                      <th>身分角色</th>
+                      <th>關鍵考點</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><strong>保險人</strong></td>
+                      <td>保險公司 (經營組織)</td>
+                      <td>收保費、承擔風險賠償責任 <strong>(第2、12題)</strong></td>
+                    </tr>
+                    <tr>
+                      <td><strong>要保人</strong></td>
+                      <td>買保險的人</td>
+                      <td>負有<strong>繳交保險費</strong>義務的人</td>
+                    </tr>
+                    <tr>
+                      <td><strong>被保險人</strong></td>
+                      <td>受保障的人</td>
+                      <td>保險事故發生享有理賠請求權</td>
+                    </tr>
+                    <tr>
+                      <td><strong>受益人</strong></td>
+                      <td>領保險金的人</td>
+                      <td>依契約指定領取賠償金</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="insurance-cases">
+                <h4>常考情境對照：</h4>
+                <div class="case-item">
+                  <span class="case-badge">公共意外責任險</span>
+                  <span>餐廳地板油膩濕滑致客人滑倒摔傷 <strong>(第9題)</strong>；營業處所意外賠償 <strong>(第17題)</strong></span>
+                </div>
+                <div class="case-item">
+                  <span class="case-badge">產品責任險</span>
+                  <span>減肥藥具瑕疵致消費者引發中風 <strong>(第14題)</strong>；注意：純粹產品排便效果未達預期<strong>不屬於</strong>產責險 <strong>(第3題)</strong></span>
+                </div>
+                <div class="case-item">
+                  <span class="case-badge">職業災害保險</span>
+                  <span>煤礦工人罹患塵肺症職業病 <strong>(第1題)</strong></span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 4 -->
+          <div class="card note-card">
+            <div class="note-card-header">
+              <span class="note-tag tag-amber">考點四</span>
+              <h3>危機管理三階段與處理原則</h3>
+            </div>
+            <div class="note-card-content">
+              <div class="crisis-steps">
+                <div class="step-card">
+                  <div class="step-num">事前</div>
+                  <div class="step-txt">
+                    <strong>預防與規劃</strong>
+                    <p>評估弱點、補強缺失、草擬應變計畫 <strong>(第11題)</strong></p>
+                  </div>
+                </div>
+                <div class="step-card">
+                  <div class="step-num">事中</div>
+                  <div class="step-txt">
+                    <strong>爆發應變</strong>
+                    <p>成立危機小組、即時媒體溝通、與受害者協調談判 <strong>(第10題)</strong></p>
+                  </div>
+                </div>
+                <div class="step-card">
+                  <div class="step-num">事後</div>
+                  <div class="step-txt">
+                    <strong>復原重建</strong>
+                    <p><strong>企業聲譽再造</strong>、制度改進 <strong>(第10題考點)</strong></p>
+                  </div>
+                </div>
+              </div>
+              <div class="note-callout warning">
+                <strong>⚠️ 豐田汽車召回案例 (第16題)：</strong>
+                未在黃金時間處理，嚴重違反應變的<strong>「即時性原則」</strong>！
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 5 -->
+          <div class="card note-card">
+            <div class="note-card-header">
+              <span class="note-tag tag-pink">考點五</span>
+              <h3>商業經營四大基本要素</h3>
+            </div>
+            <div class="note-card-content">
+              <div class="elements-grid">
+                <div class="elem-box">
+                  <div class="elem-title">1. 商品 (Goods)</div>
+                  <p>黑糖珍珠鮮奶、隱形眼鏡等實體商品或勞務 <strong>(第19題)</strong></p>
+                </div>
+                <div class="elem-box">
+                  <div class="elem-title">2. 資本 (Capital)</div>
+                  <p>貨幣、廠房設備，以及<strong>專利權、商標等無形資產</strong> <strong>(第20題)</strong></p>
+                </div>
+                <div class="elem-box">
+                  <div class="elem-title">3. 商業信用 (Credit)</div>
+                  <p>商譽、履約信用、企業信譽與形象</p>
+                </div>
+                <div class="elem-box">
+                  <div class="elem-title">4. 努力 / 人才 (Labor)</div>
+                  <p>企業家精神、員工專業智慧與辛勤付出</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Mobile Drawer for Question Navigation -->
+    <div id="drawer-backdrop" class="drawer-backdrop hidden"></div>
+    <aside id="question-drawer" class="question-drawer">
+      <div class="drawer-header">
+        <h3>題目導覽 (20 題)</h3>
+        <button id="btn-close-drawer" class="icon-btn" aria-label="關閉">✕</button>
+      </div>
+      <div class="drawer-legend">
+        <span><span class="dot done"></span> 已作答</span>
+        <span><span class="dot correct"></span> 正確</span>
+        <span><span class="dot wrong"></span> 錯誤</span>
+        <span><span class="dot current"></span> 當前</span>
+      </div>
+      <div class="drawer-grid" id="drawer-grid-container">
+        <!-- 1 to 20 buttons -->
+      </div>
+    </aside>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
